@@ -8,12 +8,18 @@ import Feedback from './src/models/feedback.model.js';
 
 const app = express();
 
-// Middleware
-app.use(cors());         // allow all origins in dev
-app.use(express.json()); // parse JSON bodies
-app.use(morgan('dev'));  // request logging
+// CORS (explicit for dev) — no wildcard routes
+app.use(cors({
+  origin: ['http://localhost:4200'],
+  methods: ['GET','POST','DELETE','OPTIONS'],
+  allowedHeaders: ['Content-Type','Authorization'],
+}));
 
-// Health check
+// Body + logs
+app.use(express.json());
+app.use(morgan('dev'));
+
+// Health
 app.get('/api/health', (_req, res) => res.json({ ok: true }));
 
 // Feedback API
@@ -27,6 +33,7 @@ app.get('/api/feedback', async (_req, res) => {
 });
 
 app.post('/api/feedback', async (req, res) => {
+  console.log('POST /api/feedback body:', req.body);
   try {
     const { name, email, message } = req.body || {};
     if (!name || !message) {
@@ -49,7 +56,6 @@ async function startServer() {
       console.error(' MONGODB_URI missing in .env');
       process.exit(1);
     }
-
     await mongoose.connect(MONGODB_URI);
     console.log('✅ MongoDB connected');
 
